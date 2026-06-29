@@ -175,5 +175,20 @@ public:
   }
 };
 
+struct PostSystem
+{
+  std::string name;
+  RobinHoodHashMap< std::string, Office > offices;
+};
+
+class PostManager
+{
+private:
+  RobinHoodHashMap< std::string, PostSystem > systems;
+  RobinHoodHashMap< std::string, Mail > global_mails;
+
+public:
+};
+
 int main()
 {}
