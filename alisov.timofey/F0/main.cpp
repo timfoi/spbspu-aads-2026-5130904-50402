@@ -270,6 +270,41 @@ public:
     }
     std::cout << "<NAME: " << off->name << ", MAILS: " << off->local_mail_ids.size() << ">\n";
   }
+
+  void add_mail(const std::string &post_name, const std::string &track_id, const std::string &office_name,
+                double weight)
+  {
+    PostSystem *sys = systems.find(post_name);
+    if (sys == nullptr || weight <= 0) {
+      std::cout << "<INVALID COMMAND>\n";
+      return;
+    }
+    Office *off = sys->offices.find(office_name);
+    if (off == nullptr || global_mails.find(track_id) != nullptr) {
+      std::cout << "<INVALID COMMAND>\n";
+      return;
+    }
+
+    Mail m;
+    m.track_id = track_id;
+    m.current_office = office_name;
+    m.current_post = post_name;
+    m.weight = weight;
+
+    global_mails.insert(track_id, std::move(m));
+    off->local_mail_ids.push_back(track_id);
+  }
+
+  void show_mail(const std::string &post_name, const std::string &track_id)
+  {
+    PostSystem *sys = systems.find(post_name);
+    Mail *m = global_mails.find(track_id);
+    if (sys == nullptr || m == nullptr || m->current_post != post_name) {
+      std::cout << "<INVALID COMMAND>\n";
+      return;
+    }
+    std::cout << "<TRACK: " << m->track_id << ", OFFICE: " << m->current_office << ", WEIGHT: " << m->weight << ">\n";
+  }
 };
 
 int main()
