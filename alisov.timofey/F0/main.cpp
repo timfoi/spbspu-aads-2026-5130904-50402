@@ -28,6 +28,12 @@ struct Office
   std::string name;
   std::vector< Link > links;
   std::vector< std::string > local_mail_ids;
+
+  Office() = default;
+  Office(const Office &) = default;
+  Office &operator=(const Office &) = default;
+  Office(Office &&) noexcept = default;
+  Office &operator=(Office &&) noexcept = default;
 };
 
 template < class K, class V >
@@ -37,6 +43,12 @@ struct Bucket
   V value;
   int psl = -1;
   BucketState state = BucketState::Empty;
+
+  Bucket() = default;
+  Bucket(const Bucket &) = default;
+  Bucket &operator=(const Bucket &) = default;
+  Bucket(Bucket &&) noexcept = default;
+  Bucket &operator=(Bucket &&) noexcept = default;
 };
 
 template < class K, class V >
@@ -46,7 +58,7 @@ private:
   std::vector< Bucket< K, V > > table;
   size_t table_size = 0;
   size_t table_capacity = 0;
-  const double MAX_LOAD_FACTOR = 0.7;
+  static constexpr double MAX_LOAD_FACTOR = 0.7;
 
   size_t get_hash(const K &key) const
   {
@@ -54,11 +66,12 @@ private:
       return 0;
     return std::hash< K >{}(key) % table_capacity;
   }
-  void insert_no_resize(const K &key, const V &value)
+
+  void insert_no_resize(const K &key, V value)
   {
     Bucket< K, V > entry;
     entry.key = key;
-    entry.value = value;
+    entry.value = std::move(value);
     entry.psl = 0;
     entry.state = BucketState::Occupied;
 
@@ -66,13 +79,13 @@ private:
 
     while (true) {
       if (table[idx].state == BucketState::Empty || table[idx].state == BucketState::Deleted) {
-        table[idx] = entry;
+        table[idx] = std::move(entry);
         table_size++;
         return;
       }
 
       if (table[idx].state == BucketState::Occupied && table[idx].key == entry.key) {
-        table[idx].value = entry.value;
+        table[idx].value = std::move(entry.value);
         return;
       }
 
@@ -96,13 +109,19 @@ private:
 
     for (size_t i = 0; i < old_capacity; ++i) {
       if (old_table[i].state == BucketState::Occupied) {
-        insert_no_resize(old_table[i].key, old_table[i].value);
+        insert_no_resize(old_table[i].key, std::move(old_table[i].value));
       }
     }
   }
 
 public:
-  RobinHoodHashMap(size_t initial_capacity = 8):
+  RobinHoodHashMap() = default;
+  RobinHoodHashMap(const RobinHoodHashMap &) = default;
+  RobinHoodHashMap &operator=(const RobinHoodHashMap &) = default;
+  RobinHoodHashMap(RobinHoodHashMap &&) noexcept = default;
+  RobinHoodHashMap &operator=(RobinHoodHashMap &&) noexcept = default;
+
+  RobinHoodHashMap(size_t initial_capacity):
     table_capacity(initial_capacity)
   {
     table.resize(table_capacity);
@@ -120,13 +139,15 @@ public:
   {
     return table;
   }
-  void insert(const K &key, const V &value)
+
+  void insert(const K &key, V value)
   {
     if (table_capacity == 0 || (double)table_size / table_capacity >= MAX_LOAD_FACTOR) {
       rehash();
     }
-    insert_no_resize(key, value);
+    insert_no_resize(key, std::move(value));
   }
+
   V *find(const K &key)
   {
     if (table_capacity == 0)
@@ -179,6 +200,12 @@ struct PostSystem
 {
   std::string name;
   RobinHoodHashMap< std::string, Office > offices;
+
+  PostSystem() = default;
+  PostSystem(const PostSystem &) = default;
+  PostSystem &operator=(const PostSystem &) = default;
+  PostSystem(PostSystem &&) noexcept = default;
+  PostSystem &operator=(PostSystem &&) noexcept = default;
 };
 
 class PostManager
@@ -188,6 +215,35 @@ private:
   RobinHoodHashMap< std::string, Mail > global_mails;
 
 public:
+  void make_post(const std::string &post_name)
+  {
+    if (systems.find(post_name) != nullptr) {
+      std::cout << "<INVALID COMMAND>\n";
+      return;
+    }
+    PostSystem new_system;
+    new_system.name = post_name;
+    systems.insert(post_name, std::move(new_system));
+  }
+
+  void show_post(const std::string &post_name)
+  {
+    PostSystem *sys = systems.find(post_name);
+    if (sys == nullptr) {
+      std::cout << "<INVALID COMMAND>\n";
+      return;
+    }
+
+    size_t mail_count = 0;
+    auto &mail_table = global_mails.get_raw_table();
+    for (const auto &bucket : mail_table) {
+      if (bucket.state == BucketState::Occupied && bucket.value.current_post == post_name) {
+        mail_count++;
+      }
+    }
+
+    std::cout << "<OFFICES: " << sys->offices.size() << ", MAILS: " << mail_count << ">\n";
+  }
 };
 
 int main()
