@@ -244,6 +244,32 @@ public:
 
     std::cout << "<OFFICES: " << sys->offices.size() << ", MAILS: " << mail_count << ">\n";
   }
+  void add_office(const std::string &post_name, const std::string &office_name)
+  {
+    PostSystem *sys = systems.find(post_name);
+    if (sys == nullptr || sys->offices.find(office_name) != nullptr) {
+      std::cout << "<INVALID COMMAND>\n";
+      return;
+    }
+    Office off;
+    off.name = office_name;
+    sys->offices.insert(office_name, std::move(off));
+  }
+
+  void show_office(const std::string &post_name, const std::string &office_name)
+  {
+    PostSystem *sys = systems.find(post_name);
+    if (sys == nullptr) {
+      std::cout << "<INVALID COMMAND>\n";
+      return;
+    }
+    Office *off = sys->offices.find(office_name);
+    if (off == nullptr) {
+      std::cout << "<INVALID COMMAND>\n";
+      return;
+    }
+    std::cout << "<NAME: " << off->name << ", MAILS: " << off->local_mail_ids.size() << ">\n";
+  }
 };
 
 int main()
