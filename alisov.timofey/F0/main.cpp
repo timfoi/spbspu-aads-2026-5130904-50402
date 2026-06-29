@@ -127,6 +127,52 @@ public:
     }
     insert_no_resize(key, value);
   }
+  V *find(const K &key)
+  {
+    if (table_capacity == 0)
+      return nullptr;
+    size_t idx = get_hash(key);
+    int current_psl = 0;
+
+    while (true) {
+      if (table[idx].state == BucketState::Empty)
+        return nullptr;
+      if (current_psl > table[idx].psl)
+        return nullptr;
+
+      if (table[idx].state == BucketState::Occupied && table[idx].key == key) {
+        return &table[idx].value;
+      }
+
+      idx = (idx + 1) % table_capacity;
+      current_psl++;
+    }
+  }
+
+  bool remove(const K &key)
+  {
+    if (table_capacity == 0)
+      return false;
+    size_t idx = get_hash(key);
+    int current_psl = 0;
+
+    while (true) {
+      if (table[idx].state == BucketState::Empty)
+        return false;
+      if (current_psl > table[idx].psl)
+        return false;
+
+      if (table[idx].state == BucketState::Occupied && table[idx].key == key) {
+        table[idx].state = BucketState::Deleted;
+        table[idx].psl = -1;
+        table_size--;
+        return true;
+      }
+
+      idx = (idx + 1) % table_capacity;
+      current_psl++;
+    }
+  }
 };
 
 int main()
