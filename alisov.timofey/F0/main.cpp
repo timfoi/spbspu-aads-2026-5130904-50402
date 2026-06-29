@@ -326,6 +326,36 @@ public:
     new_off->local_mail_ids.push_back(track_id);
     m->current_office = new_office_name;
   }
+
+  void find_weight(const std::string &post_name, double left, double right)
+  {
+    if (systems.find(post_name) == nullptr || left > right) {
+      std::cout << "<INVALID COMMAND>\n";
+      return;
+    }
+
+    std::vector< Mail > result;
+    auto &mail_table = global_mails.get_raw_table();
+    for (const auto &bucket : mail_table) {
+      if (bucket.state == BucketState::Occupied && bucket.value.current_post == post_name) {
+        if (bucket.value.weight >= left && bucket.value.weight <= right) {
+          result.push_back(bucket.value);
+        }
+      }
+    }
+
+    std::sort(result.begin(), result.end(), [](const Mail &a, const Mail &b) {
+      return a.track_id < b.track_id;
+    });
+
+    std::cout << "<MAILS:";
+    for (size_t i = 0; i < result.size(); ++i) {
+      std::cout << " " << result[i].track_id << " (" << result[i].weight << ")";
+      if (i + 1 < result.size())
+        std::cout << ",";
+    }
+    std::cout << ">\n";
+  }
 };
 
 int main()
