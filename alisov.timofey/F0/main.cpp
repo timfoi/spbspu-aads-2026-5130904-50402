@@ -35,7 +35,7 @@ struct Bucket
 {
   K key;
   V value;
-  int psl = -1; // Probe Sequence Length
+  int psl = -1;
   BucketState state = BucketState::Empty;
 };
 
@@ -54,6 +54,36 @@ private:
       return 0;
     return std::hash< K >{}(key) % table_capacity;
   }
+  void insert_no_resize(const K &key, const V &value)
+  {
+    Bucket< K, V > entry;
+    entry.key = key;
+    entry.value = value;
+    entry.psl = 0;
+    entry.state = BucketState::Occupied;
+
+    size_t idx = get_hash(key);
+
+    while (true) {
+      if (table[idx].state == BucketState::Empty || table[idx].state == BucketState::Deleted) {
+        table[idx] = entry;
+        table_size++;
+        return;
+      }
+
+      if (table[idx].state == BucketState::Occupied && table[idx].key == entry.key) {
+        table[idx].value = entry.value;
+        return;
+      }
+
+      if (entry.psl > table[idx].psl) {
+        std::swap(entry, table[idx]);
+      }
+
+      idx = (idx + 1) % table_capacity;
+      entry.psl++;
+    }
+  }
 
   void rehash()
   {
@@ -70,8 +100,6 @@ private:
       }
     }
   }
-
-  void insert_no_resize(const K &key, const V &value);
 
 public:
   RobinHoodHashMap(size_t initial_capacity = 8):
@@ -91,6 +119,13 @@ public:
   const std::vector< Bucket< K, V > > &get_raw_table() const
   {
     return table;
+  }
+  void insert(const K &key, const V &value)
+  {
+    if (table_capacity == 0 || (double)table_size / table_capacity >= MAX_LOAD_FACTOR) {
+      rehash();
+    }
+    insert_no_resize(key, value);
   }
 };
 
