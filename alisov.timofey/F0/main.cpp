@@ -305,6 +305,27 @@ public:
     }
     std::cout << "<TRACK: " << m->track_id << ", OFFICE: " << m->current_office << ", WEIGHT: " << m->weight << ">\n";
   }
+  void move_mail(const std::string &post_name, const std::string &track_id, const std::string &new_office_name)
+  {
+    PostSystem *sys = systems.find(post_name);
+    Mail *m = global_mails.find(track_id);
+    if (sys == nullptr || m == nullptr || m->current_post != post_name) {
+      std::cout << "<INVALID COMMAND>\n";
+      return;
+    }
+    Office *old_off = sys->offices.find(m->current_office);
+    Office *new_off = sys->offices.find(new_office_name);
+    if (old_off == nullptr || new_off == nullptr) {
+      std::cout << "<INVALID COMMAND>\n";
+      return;
+    }
+
+    auto &v = old_off->local_mail_ids;
+    v.erase(std::remove(v.begin(), v.end(), track_id), v.end());
+
+    new_off->local_mail_ids.push_back(track_id);
+    m->current_office = new_office_name;
+  }
 };
 
 int main()
