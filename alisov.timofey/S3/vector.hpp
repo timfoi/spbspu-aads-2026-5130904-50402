@@ -23,6 +23,19 @@ namespace alisov
     {
       delete[] reinterpret_cast< char * >(data_);
     }
+    void reserve(size_t new_cap)
+    {
+      if (new_cap <= capacity_)
+        return;
+      T *new_data = reinterpret_cast< T * >(new char[new_cap * sizeof(T)]);
+      for (size_t i = 0; i < size_; ++i) {
+        new (&new_data[i]) T(std::move(data_[i]));
+        data_[i].~T();
+      }
+      delete[] reinterpret_cast< char * >(data_);
+      data_ = new_data;
+      capacity_ = new_cap;
+    }
   };
 }
 #endif
