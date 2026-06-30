@@ -28,4 +28,24 @@ namespace alisov
     return res;
   }
 
+  Queue< std::string > split(const std::string &expression)
+  {
+    Queue< std::string > res;
+    std::string current;
+    for (char ch : expression) {
+      if (ch == ' ') {
+        if (!current.empty()) {
+          res.push(current);
+          current.clear();
+        }
+      } else {
+        current += ch;
+      }
+    }
+    if (!current.empty()) {
+      res.push(current);
+    }
+    return res;
+  }
+
 }
