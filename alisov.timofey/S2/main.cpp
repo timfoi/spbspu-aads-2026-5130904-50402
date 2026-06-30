@@ -8,26 +8,24 @@
 
 namespace alisov
 {
-  int getPriority(char op)
+  int getPriority(const std::string &op)
   {
-    if (op == '+' || op == '-')
-      return 1;
-    if (op == '*' || op == '/' || op == '%')
+    if (op == "<<") {
+      return 3;
+    }
+    if (op == "*" || op == "/" || op == "%")
       return 2;
+    if (op == "+" || op == "-")
+      return 1;
     return 0;
   }
 
-  bool isNumber(const std::string &s)
+  bool isOperation(const std::string &s)
   {
-    if (s.empty())
-      return false;
-    size_t start = 0;
-    if (s[0] == '-' && s.size() > 1)
-      start = 1;
-    for (size_t i = start; i < s.size(); ++i) {
-      if (!std::isdigit(s[i]))
-        return false;
-    }
-    return true;
+    bool res = s == "<<";
+    res = res || s == "*" || s == "/" || s == "%";
+    res = res || s == "+" || s == "-";
+    return res;
   }
+
 }
