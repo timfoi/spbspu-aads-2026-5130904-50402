@@ -145,4 +145,34 @@ namespace alisov
     operandStack.pop();
     return finalResult;
   }
+  void processExpressions(std::istream &input)
+  {
+    std::string line;
+    Stack< long long > results;
+
+    while (std::getline(input, line)) {
+      if (line.empty()) {
+        continue;
+      }
+      Queue< std::string > tokens = split(line);
+      if (tokens.empty()) {
+        continue;
+      }
+      Queue< std::string > postfix = toPostfix(tokens);
+      long long res = evaluatePostfix(postfix);
+      results.push(res);
+    }
+
+    bool first = true;
+    while (!results.empty()) {
+      if (!first) {
+        std::cout << " ";
+      }
+      std::cout << results.get();
+      results.pop();
+      first = false;
+    }
+    std::cout << "\n";
+  }
+
 }
