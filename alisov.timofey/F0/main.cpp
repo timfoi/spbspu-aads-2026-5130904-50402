@@ -401,7 +401,7 @@ public:
       }
     }
 
-    auto get_state = [&](const std::string &name) -> NodeState * {
+    auto get_state = [&states](const std::string &name) -> NodeState * {
       for (auto &s : states)
         if (s.name == name)
           return &s;
@@ -409,8 +409,10 @@ public:
     };
 
     NodeState *start_state = get_state(start);
-    if (start_state)
-      start_state->dist = 0;
+    if (!start_state)
+      return {{}, -1};
+
+    start_state->dist = 0;
 
     for (size_t i = 0; i < states.size(); ++i) {
       NodeState *min_node = nullptr;
@@ -463,7 +465,6 @@ public:
 
     return {path, target_state->dist};
   }
-
   void route_mail(const std::string &post_name, const std::string &track_id, const std::string &target_office,
                   int mode = 0)
   {
@@ -552,4 +553,6 @@ void process_commands()
 }
 
 int main()
-{}
+{
+  process_commands();
+}
