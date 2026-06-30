@@ -25,7 +25,7 @@ namespace alisov
 template < class T >
 void alisov::Stack< T >::push(const T &rhs)
 {
-  data_.push_front(rhs);
+  data_.pushFront(rhs);
 }
 
 template < class T >

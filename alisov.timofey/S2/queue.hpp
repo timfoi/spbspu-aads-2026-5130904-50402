@@ -25,7 +25,7 @@ namespace alisov
 template < class T >
 void alisov::Queue< T >::push(const T &rhs)
 {
-  data_.push_back(rhs);
+  data_.pushBack(rhs);
 }
 
 template < class T >
