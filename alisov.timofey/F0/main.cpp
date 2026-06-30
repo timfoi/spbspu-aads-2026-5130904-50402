@@ -463,6 +463,37 @@ public:
 
     return {path, target_state->dist};
   }
+
+  void route_mail(const std::string &post_name, const std::string &track_id, const std::string &target_office,
+                  int mode = 0)
+  {
+    PostSystem *sys = systems.find(post_name);
+    Mail *m = global_mails.find(track_id);
+    if (sys == nullptr || m == nullptr || m->current_post != post_name) {
+      std::cout << "<INVALID COMMAND>\n";
+      return;
+    }
+    if (sys->offices.find(target_office) == nullptr) {
+      std::cout << "<INVALID COMMAND>\n";
+      return;
+    }
+
+    RouteResult res = calculate(sys, m->current_office, target_office, mode);
+    if (res.path.empty()) {
+      std::cout << "<INVALID COMMAND>\n";
+      return;
+    }
+
+    std::cout << "<ROUTED: " << track_id << ", PATH: ";
+    for (size_t i = 0; i < res.path.size(); ++i) {
+      std::cout << res.path[i];
+      if (i + 1 < res.path.size())
+        std::cout << " -> ";
+    }
+    std::cout << ", TOTAL DISTANCE: " << res.total_metric << ">\n";
+
+    move_mail(post_name, track_id, target_office);
+  }
 };
 
 int main()
