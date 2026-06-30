@@ -52,6 +52,24 @@ namespace alisov
     {
       return size_ == 0;
     }
+    T &operator[](size_t index)
+    {
+      return data_[index];
+    }
+    const T &operator[](size_t index) const
+    {
+      return data_[index];
+    }
+
+    void erase(size_t index)
+    {
+      data_[index].~T();
+      for (size_t i = index; i < size_ - 1; ++i) {
+        new (&data_[i]) T(std::move(data_[i + 1]));
+        data_[i + 1].~T();
+      }
+      --size_;
+    }
   };
 }
 #endif
