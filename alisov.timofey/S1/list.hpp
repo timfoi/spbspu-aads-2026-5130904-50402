@@ -2,6 +2,7 @@
 #define LIST_HPP
 #include <algorithm>
 #include <stdexcept>
+#include <utility>
 
 namespace alisov
 {
@@ -60,6 +61,8 @@ namespace alisov
     BiList< T > &operator=(const BiList< T > &);
     BiList< T > &operator=(BiList< T > &&);
 
+    void swap(BiList< T > &) noexcept;
+
     BLIter< T > begin();
     BLCIter< T > cbegin() const;
 
@@ -110,6 +113,7 @@ alisov::BLCIter< T > alisov::BiList< T >::cend() const
 {
   return alisov::BLCIter< T >(nullptr);
 }
+
 template < class T >
 alisov::BiList< T >::BiList(BiList< T > &&other):
   head(other.head),
@@ -131,6 +135,13 @@ alisov::BiList< T > &alisov::BiList< T >::operator=(BiList< T > &&other)
   other.head = nullptr;
   other.tail = nullptr;
   return *this;
+}
+
+template < class T >
+void alisov::BiList< T >::swap(BiList< T > &other) noexcept
+{
+  std::swap(head, other.head);
+  std::swap(tail, other.tail);
 }
 
 template < class T >
@@ -249,7 +260,6 @@ void alisov::BiList< T >::pushBack(const T &value)
     }
   } else {
     Node *next = nullptr;
-
     try {
       next = new Node{value, nullptr, tail};
       tail->next = next;
@@ -266,7 +276,6 @@ void alisov::BiList< T >::pushFront(T &&value)
 {
   if (!head) {
     head = nullptr;
-
     try {
       head = new Node{std::move(value)};
       tail = head;
@@ -276,7 +285,6 @@ void alisov::BiList< T >::pushFront(T &&value)
     }
   } else {
     Node *prev = nullptr;
-
     try {
       prev = new Node{std::move(value), head, nullptr};
       head->prev = prev;
@@ -302,7 +310,6 @@ void alisov::BiList< T >::pushFront(const T &value)
     }
   } else {
     Node *prev = nullptr;
-
     try {
       prev = new Node{value, head, nullptr};
       head->prev = prev;
@@ -317,36 +324,24 @@ void alisov::BiList< T >::pushFront(const T &value)
 template < class T >
 T &alisov::BiList< T >::front()
 {
-  if (!head) {
-    throw std::out_of_range("Empty list");
-  }
   return head->value;
 }
 
 template < class T >
 const T &alisov::BiList< T >::front() const
 {
-  if (!head) {
-    throw std::out_of_range("Empty list");
-  }
   return head->value;
 }
 
 template < class T >
 T &alisov::BiList< T >::back()
 {
-  if (!head) {
-    throw std::out_of_range("Empty list");
-  }
   return tail->value;
 }
 
 template < class T >
 const T &alisov::BiList< T >::back() const
 {
-  if (!head) {
-    throw std::out_of_range("Empty list");
-  }
   return tail->value;
 }
 
@@ -416,6 +411,7 @@ alisov::BLCIter< T > &alisov::BLCIter< T >::operator--()
   curr = curr->prev;
   return *this;
 }
+
 template < class T >
 alisov::BLCIter< T >::BLCIter(const typename BiList< T >::Node *node):
   curr(node)
@@ -449,28 +445,9 @@ alisov::BiList< T >::BiList(const BiList< T > &other)
 template < class T >
 alisov::BiList< T > &alisov::BiList< T >::operator=(const BiList< T > &other)
 {
-  if (this == &other) {
-    return *this;
-  }
-  try {
-    Node *curr = nullptr;
-    Node *otherCurr = other.head;
-    while (otherCurr) {
-      if (!curr) {
-        head = new Node{otherCurr->value};
-        curr = head;
-        otherCurr = otherCurr->next;
-        continue;
-      }
-      Node *next = new Node{otherCurr->value, nullptr, curr};
-      curr->next = next;
-      curr = next;
-      otherCurr = otherCurr->next;
-    }
-    tail = curr;
-  } catch (...) {
-    clear();
-    throw;
+  if (this != &other) {
+    BiList< T > temp(other);
+    this->swap(temp);
   }
   return *this;
 }
