@@ -1,6 +1,7 @@
 #include <cctype>
 #include <fstream>
 #include <iostream>
+#include <limits>
 #include <stdexcept>
 #include <string>
 #include "queue.hpp"
@@ -96,17 +97,40 @@ namespace alisov
       return a ^ b;
     }
     if (op == "+") {
+      if ((b > 0 && a > std::numeric_limits< long long >::max() - b)
+          || (b < 0 && a < std::numeric_limits< long long >::min() - b)) {
+        throw std::overflow_error("Addition overflow");
+      }
       return a + b;
     }
     if (op == "-") {
+      if ((b > 0 && a < std::numeric_limits< long long >::min() + b)
+          || (b < 0 && a > std::numeric_limits< long long >::max() + b)) {
+        throw std::underflow_error("Subtraction overflow");
+      }
       return a - b;
     }
     if (op == "*") {
+      if (a > 0 && b > 0 && a > std::numeric_limits< long long >::max() / b) {
+        throw std::overflow_error("Multiplication overflow");
+      }
+      if (a > 0 && b < 0 && b < std::numeric_limits< long long >::min() / a) {
+        throw std::underflow_error("Multiplication underflow");
+      }
+      if (a < 0 && b > 0 && a < std::numeric_limits< long long >::min() / b) {
+        throw std::underflow_error("Multiplication underflow");
+      }
+      if (a < 0 && b < 0 && (a == -1 || b == -1 || a < std::numeric_limits< long long >::max() / b)) {
+        throw std::overflow_error("Multiplication overflow");
+      }
       return a * b;
     }
     if (op == "/") {
       if (b == 0) {
         throw std::runtime_error("Division by zero");
+      }
+      if (a == std::numeric_limits< long long >::min() && b == -1) {
+        throw std::overflow_error("Division overflow");
       }
       return a / b;
     }
