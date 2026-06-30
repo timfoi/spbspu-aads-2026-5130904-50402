@@ -32,3 +32,17 @@ BOOST_AUTO_TEST_CASE(pop_method_removes_first_element)
   q.pop();
   BOOST_TEST(q.get() == 2);
 }
+
+BOOST_AUTO_TEST_CASE(pop_throws_exception_if_queue_is_empty)
+{
+  alisov::Queue< int > q;
+  BOOST_REQUIRE(q.empty());
+  BOOST_CHECK_THROW(q.pop(), std::underflow_error);
+}
+
+BOOST_AUTO_TEST_CASE(get_throws_exception_if_queue_is_empty)
+{
+  alisov::Queue< int > q;
+  BOOST_REQUIRE(q.empty());
+  BOOST_CHECK_THROW(q.get(), std::underflow_error);
+}
