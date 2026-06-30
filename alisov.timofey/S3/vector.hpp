@@ -36,6 +36,22 @@ namespace alisov
       data_ = new_data;
       capacity_ = new_cap;
     }
+    void push_back(const T &value)
+    {
+      if (size_ >= capacity_) {
+        reserve(capacity_ == 0 ? 4 : capacity_ * 2);
+      }
+      new (&data_[size_]) T(value);
+      ++size_;
+    }
+    size_t size() const
+    {
+      return size_;
+    }
+    bool empty() const
+    {
+      return size_ == 0;
+    }
   };
 }
 #endif
