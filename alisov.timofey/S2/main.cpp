@@ -48,4 +48,50 @@ namespace alisov
     return res;
   }
 
+  Queue< std::string > toPostfix(Queue< std::string > &infixTokens)
+  {
+    Queue< std::string > outputQueue;
+    Stack< std::string > operatorStack;
+
+    while (!infixTokens.empty()) {
+      std::string val = infixTokens.get();
+      if (val == "(") {
+        operatorStack.push(val);
+      } else if (val == ")") {
+        std::string op = operatorStack.get();
+        while (isOperation(op)) {
+          outputQueue.push(op);
+          operatorStack.pop();
+          op = operatorStack.get();
+        }
+        if (operatorStack.get() == "(") {
+          operatorStack.pop();
+        }
+      } else if (isOperation(val)) {
+        if (!operatorStack.empty()) {
+          std::string op = operatorStack.get();
+          while (op != "(" && getPriority(op) >= getPriority(val)) {
+            outputQueue.push(op);
+            operatorStack.pop();
+            if (operatorStack.empty()) {
+              break;
+            }
+            op = operatorStack.get();
+          }
+        }
+        operatorStack.push(val);
+      } else {
+        outputQueue.push(val);
+      }
+      infixTokens.pop();
+    }
+
+    while (!operatorStack.empty()) {
+      outputQueue.push(operatorStack.get());
+      operatorStack.pop();
+    }
+
+    return outputQueue;
+  }
+
 }
