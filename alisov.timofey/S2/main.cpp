@@ -10,9 +10,6 @@ namespace alisov
 {
   int getPriority(const std::string &op)
   {
-    if (op == "<<") {
-      return 3;
-    }
     if (op == "*" || op == "/" || op == "%")
       return 2;
     if (op == "+" || op == "-")
@@ -22,10 +19,7 @@ namespace alisov
 
   bool isOperation(const std::string &s)
   {
-    bool res = s == "<<";
-    res = res || s == "*" || s == "/" || s == "%";
-    res = res || s == "+" || s == "-";
-    return res;
+    return s == "*" || s == "/" || s == "%" || s == "+" || s == "-";
   }
 
   Queue< std::string > split(const std::string &expression)
@@ -94,4 +88,61 @@ namespace alisov
     return outputQueue;
   }
 
+  long long applyOp(long long a, long long b, const std::string &op)
+  {
+    if (op == "+")
+      return a + b;
+    if (op == "-")
+      return a - b;
+    if (op == "*")
+      return a * b;
+    if (op == "/") {
+      if (b == 0)
+        throw std::runtime_error("Division by zero");
+      return a / b;
+    }
+    if (op == "%") {
+      if (b == 0)
+        throw std::runtime_error("Division by zero");
+      long long res = a % b;
+      if (res < 0 && b > 0)
+        res += b;
+      if (res > 0 && b < 0)
+        res += b;
+      return res;
+    }
+    throw std::invalid_argument("Unknown operator");
+  }
+
+  long long evaluatePostfix(Queue< std::string > &postfixTokens)
+  {
+    Stack< long long > operandStack;
+
+    while (!postfixTokens.empty()) {
+      std::string token = postfixTokens.get();
+      postfixTokens.pop();
+
+      if (!isOperation(token)) {
+        operandStack.push(std::stoll(token));
+      } else {
+        if (operandStack.size() < 2) {
+          throw std::runtime_error("Invalid expression structure");
+        }
+        long long b = operandStack.get();
+        operandStack.pop();
+        long long a = operandStack.get();
+        operandStack.pop();
+        long long result = applyOp(a, b, token);
+        operandStack.push(result);
+      }
+    }
+
+    if (operandStack.size() != 1) {
+      throw std::runtime_error("Invalid expression structure");
+    }
+
+    long long finalResult = operandStack.get();
+    operandStack.pop();
+    return finalResult;
+  }
 }
