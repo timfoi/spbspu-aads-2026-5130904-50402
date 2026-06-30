@@ -33,3 +33,17 @@ BOOST_AUTO_TEST_CASE(pop_remove_elem)
   s.pop();
   BOOST_TEST(s.get() == 1);
 }
+
+BOOST_AUTO_TEST_CASE(pop_throws_exception_if_stack_is_empty)
+{
+  alisov::Stack< int > s;
+  BOOST_REQUIRE(s.empty());
+  BOOST_CHECK_THROW(s.pop(), std::underflow_error);
+}
+
+BOOST_AUTO_TEST_CASE(get_throws_exception_if_stack_is_empty)
+{
+  alisov::Stack< int > s;
+  BOOST_REQUIRE(s.empty());
+  BOOST_CHECK_THROW(s.get(), std::underflow_error);
+}
