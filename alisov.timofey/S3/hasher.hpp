@@ -3,6 +3,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <cstring>
+#include <iostream>
 
 namespace alisov
 {
@@ -69,6 +70,25 @@ namespace alisov
     size_t operator()(const T &key) const
     {
       return hashBytes(reinterpret_cast< const uint8_t * >(&key), sizeof(T));
+    }
+  };
+  template <>
+  struct SHA1< std::string >
+  {
+    size_t operator()(const std::string &key) const
+    {
+      return hashBytes(reinterpret_cast< const uint8_t * >(key.data()), key.size());
+    }
+  };
+
+  template < class T1, class T2 >
+  struct SHA1< std::pair< T1, T2 > >
+  {
+    size_t operator()(const std::pair< T1, T2 > &key) const
+    {
+      size_t h1 = SHA1< T1 >{}(key.first);
+      size_t h2 = SHA1< T2 >{}(key.second);
+      return h1 ^ (h2 + 0x9e3779b9 + (h1 << 6) + (h1 >> 2));
     }
   };
 }
