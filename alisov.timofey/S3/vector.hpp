@@ -70,6 +70,33 @@ namespace alisov
       }
       --size_;
     }
+    Vector(const Vector &other):
+      data_(nullptr),
+      size_(0),
+      capacity_(0)
+    {
+      reserve(other.size_);
+      for (size_t i = 0; i < other.size_; ++i) {
+        new (&data_[i]) T(other.data_[i]);
+      }
+      size_ = other.size_;
+    }
+    Vector(Vector &&other) noexcept:
+      data_(other.data_),
+      size_(other.size_),
+      capacity_(other.capacity_)
+    {
+      other.data_ = nullptr;
+      other.size_ = 0;
+      other.capacity_ = 0;
+    }
+    Vector &operator=(Vector other)
+    {
+      std::swap(data_, other.data_);
+      std::swap(size_, other.size_);
+      std::swap(capacity_, other.capacity_);
+      return *this;
+    }
   };
 }
 #endif
