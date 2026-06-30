@@ -161,6 +161,52 @@ namespace alisov
       ++element_count_;
       return buckets_[idx][buckets_[idx].size() - 1].value;
     }
+    bool erase(const Key &k)
+    {
+      if (slots_count_ == 0) {
+        return false;
+      }
+      size_t idx = getBucketIndex(k);
+      for (size_t i = 0; i < buckets_[idx].size(); ++i) {
+        if (equal_(buckets_[idx][i].key, k)) {
+          buckets_[idx].erase(i);
+          --element_count_;
+          return true;
+        }
+      }
+      return false;
+    }
+
+    Value drop(Key k)
+    {
+      Value val = at(k);
+      erase(k);
+      return val;
+    }
+
+    void rehash(size_t slots)
+    {
+      HashTable< Key, Value, Hash, Equal > new_table(slots);
+      for (size_t i = 0; i < slots_count_; ++i) {
+        for (size_t j = 0; j < buckets_[i].size(); ++j) {
+          new_table.insert(buckets_[i][j].key, buckets_[i][j].value);
+        }
+      }
+      buckets_ = std::move(new_table.buckets_);
+      element_count_ = new_table.element_count_;
+      slots_count_ = new_table.slots_count_;
+    }
+
+    Vector< Key > getAllKeys() const
+    {
+      Vector< Key > keys;
+      for (size_t i = 0; i < slots_count_; ++i) {
+        for (size_t j = 0; j < buckets_[i].size(); ++j) {
+          keys.push_back(buckets_[i][j].key);
+        }
+      }
+      return keys;
+    }
   };
 }
 
