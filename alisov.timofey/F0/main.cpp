@@ -496,5 +496,60 @@ public:
   }
 };
 
+void process_commands()
+{
+  PostManager manager;
+  std::string cmd;
+
+  while (std::cin >> cmd) {
+    if (cmd == "make-post") {
+      std::string name;
+      std::cin >> name;
+      manager.make_post(name);
+    } else if (cmd == "show-post") {
+      std::string name;
+      std::cin >> name;
+      manager.show_post(name);
+    } else if (cmd == "add-office") {
+      std::string p_name, o_name;
+      std::cin >> p_name >> o_name;
+      manager.add_office(p_name, o_name);
+    } else if (cmd == "show-office") {
+      std::string p_name, o_name;
+      std::cin >> p_name >> o_name;
+      manager.show_office(p_name, o_name);
+    } else if (cmd == "add-mail") {
+      std::string p_name, t_id, o_name;
+      double w;
+      std::cin >> p_name >> t_id >> o_name >> w;
+      manager.add_mail(p_name, t_id, o_name, w);
+    } else if (cmd == "show-mail") {
+      std::string p_name, t_id;
+      std::cin >> p_name >> t_id;
+      manager.show_mail(p_name, t_id);
+    } else if (cmd == "move-mail") {
+      std::string p_name, t_id, new_o;
+      std::cin >> p_name >> t_id >> new_o;
+      manager.move_mail(p_name, t_id, new_o);
+    } else if (cmd == "find-weight") {
+      std::string p_name;
+      double l, r;
+      std::cin >> p_name >> l >> r;
+      manager.find_weight(p_name, l, r);
+    } else if (cmd == "link-offices") {
+      std::string p_name, o1, o2;
+      double d;
+      std::cin >> p_name >> o1 >> o2 >> d;
+      manager.link_offices(p_name, o1, o2, d);
+    } else if (cmd == "route-mail") {
+      std::string p_name, t_id, t_off;
+      std::cin >> p_name >> t_id >> t_off;
+      manager.route_mail(p_name, t_id, t_off, 0);
+    } else {
+      std::cout << "<INVALID COMMAND>\n";
+    }
+  }
+}
+
 int main()
 {}
