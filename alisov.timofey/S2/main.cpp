@@ -137,26 +137,37 @@ namespace alisov
       if (!isOperation(token)) {
         operandStack.push(std::stoll(token));
       } else {
-        if (operandStack.size() < 2) {
+        if (operandStack.empty()) {
           throw std::runtime_error("Invalid expression structure");
         }
         long long b = operandStack.get();
         operandStack.pop();
+
+        if (operandStack.empty()) {
+          throw std::runtime_error("Invalid expression structure");
+        }
         long long a = operandStack.get();
         operandStack.pop();
+
         long long result = applyOp(a, b, token);
         operandStack.push(result);
       }
     }
 
-    if (operandStack.size() != 1) {
+    if (operandStack.empty()) {
       throw std::runtime_error("Invalid expression structure");
     }
 
     long long finalResult = operandStack.get();
     operandStack.pop();
+
+    if (!operandStack.empty()) {
+      throw std::runtime_error("Invalid expression structure");
+    }
+
     return finalResult;
   }
+
   void processExpressions(std::istream &input)
   {
     std::string line;

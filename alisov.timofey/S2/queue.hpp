@@ -16,7 +16,6 @@ namespace alisov
     const T &get() const;
     void pop();
     bool empty() const noexcept;
-    size_t size() const noexcept;
 
   private:
     BiList< T > data_;
@@ -60,12 +59,6 @@ template < class T >
 bool alisov::Queue< T >::empty() const noexcept
 {
   return data_.empty();
-}
-
-template < class T >
-size_t alisov::Queue< T >::size() const noexcept
-{
-  return data_.size();
 }
 
 #endif
