@@ -376,6 +376,93 @@ public:
 
     std::cout << "<LINKED: " << off1 << " - " << off2 << ", DISTANCE: " << dist << ">\n";
   }
+
+  struct RouteResult
+  {
+    std::vector< std::string > path;
+    double total_metric = -1;
+  };
+
+  RouteResult calculate(PostSystem *sys, const std::string &start, const std::string &target, int mode)
+  {
+    struct NodeState
+    {
+      std::string name;
+      double dist = 1e9;
+      std::string parent = "";
+      bool visited = false;
+    };
+
+    std::vector< NodeState > states;
+    auto &offices_table = sys->offices.get_raw_table();
+    for (const auto &b : offices_table) {
+      if (b.state == BucketState::Occupied) {
+        states.push_back({b.key, 1e9, "", false});
+      }
+    }
+
+    auto get_state = [&](const std::string &name) -> NodeState * {
+      for (auto &s : states)
+        if (s.name == name)
+          return &s;
+      return nullptr;
+    };
+
+    NodeState *start_state = get_state(start);
+    if (start_state)
+      start_state->dist = 0;
+
+    for (size_t i = 0; i < states.size(); ++i) {
+      NodeState *min_node = nullptr;
+      for (auto &s : states) {
+        if (!s.visited && (min_node == nullptr || s.dist < min_node->dist)) {
+          min_node = &s;
+        }
+      }
+
+      if (min_node == nullptr || min_node->dist >= 1e9)
+        break;
+      min_node->visited = true;
+
+      if (min_node->name == target)
+        break;
+
+      Office *off = sys->offices.find(min_node->name);
+      if (!off)
+        continue;
+
+      for (const auto &link : off->links) {
+        NodeState *to_state = get_state(link.to_office);
+        if (!to_state || to_state->visited)
+          continue;
+
+        double weight = link.distance;
+        if (mode == 1)
+          weight = link.cost;
+        if (mode == 2)
+          weight = link.time;
+
+        if (min_node->dist + weight < to_state->dist) {
+          to_state->dist = min_node->dist + weight;
+          to_state->parent = min_node->name;
+        }
+      }
+    }
+
+    NodeState *target_state = get_state(target);
+    if (!target_state || target_state->dist >= 1e9)
+      return {{}, -1};
+
+    std::vector< std::string > path;
+    std::string curr = target;
+    while (curr != "") {
+      path.push_back(curr);
+      curr = get_state(curr)->parent;
+    }
+    std::reverse(path.begin(), path.end());
+
+    return {path, target_state->dist};
+  }
 };
 
 int main()
