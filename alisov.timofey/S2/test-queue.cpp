@@ -13,3 +13,22 @@ BOOST_AUTO_TEST_CASE(push_make_queue_non_empty)
   q.push(1);
   BOOST_TEST(!q.empty());
 }
+
+BOOST_AUTO_TEST_CASE(get_method_return_first_inserted_elem)
+{
+  alisov::Queue< int > q;
+  q.push(1);
+  q.push(2);
+  q.push(3);
+  const alisov::Queue< int > rq = q;
+  BOOST_TEST(rq.get() == 1);
+}
+
+BOOST_AUTO_TEST_CASE(pop_method_removes_first_element)
+{
+  alisov::Queue< int > q;
+  q.push(1);
+  q.push(2);
+  q.pop();
+  BOOST_TEST(q.get() == 2);
+}
