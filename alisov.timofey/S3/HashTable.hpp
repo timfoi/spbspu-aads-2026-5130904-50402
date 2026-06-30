@@ -207,6 +207,14 @@ namespace alisov
       }
       return keys;
     }
+    void swap(HashTable &other) noexcept
+    {
+      buckets_.swap(other.buckets_);
+      std::swap(element_count_, other.element_count_);
+      std::swap(slots_count_, other.slots_count_);
+      std::swap(hasher_, other.hasher_);
+      std::swap(equal_, other.equal_);
+    }
   };
 }
 
