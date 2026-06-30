@@ -10,16 +10,18 @@ namespace alisov
 {
   int getPriority(const std::string &op)
   {
-    if (op == "*" || op == "/" || op == "%")
-      return 2;
-    if (op == "+" || op == "-")
+    if (op == "^")
       return 1;
+    if (op == "+" || op == "-")
+      return 2;
+    if (op == "*" || op == "/" || op == "%")
+      return 3;
     return 0;
   }
 
   bool isOperation(const std::string &s)
   {
-    return s == "*" || s == "/" || s == "%" || s == "+" || s == "-";
+    return s == "^" || s == "*" || s == "/" || s == "%" || s == "+" || s == "-";
   }
 
   Queue< std::string > split(const std::string &expression)
@@ -90,25 +92,35 @@ namespace alisov
 
   long long applyOp(long long a, long long b, const std::string &op)
   {
-    if (op == "+")
+    if (op == "^") {
+      return a ^ b;
+    }
+    if (op == "+") {
       return a + b;
-    if (op == "-")
+    }
+    if (op == "-") {
       return a - b;
-    if (op == "*")
+    }
+    if (op == "*") {
       return a * b;
+    }
     if (op == "/") {
-      if (b == 0)
+      if (b == 0) {
         throw std::runtime_error("Division by zero");
+      }
       return a / b;
     }
     if (op == "%") {
-      if (b == 0)
+      if (b == 0) {
         throw std::runtime_error("Division by zero");
+      }
       long long res = a % b;
-      if (res < 0 && b > 0)
+      if (res < 0 && b > 0) {
         res += b;
-      if (res > 0 && b < 0)
+      }
+      if (res > 0 && b < 0) {
         res += b;
+      }
       return res;
     }
     throw std::invalid_argument("Unknown operator");
