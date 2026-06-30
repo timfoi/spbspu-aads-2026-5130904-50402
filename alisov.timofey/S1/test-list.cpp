@@ -1,4 +1,3 @@
-#define BOOST_TEST_MODULE S1
 #include <stdexcept>
 #include <boost/test/unit_test.hpp>
 #include "../common/list.hpp"
