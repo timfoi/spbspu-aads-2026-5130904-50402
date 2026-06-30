@@ -3,7 +3,7 @@
 
 #include <cstddef>
 #include <stdexcept>
-#include "list.hpp"
+#include "../common/list.hpp"
 
 namespace alisov
 {
@@ -20,7 +20,7 @@ namespace alisov
     size_t size() const noexcept;
 
   private:
-    List< T > data_;
+    BiList< T > data_;
   };
 }
 

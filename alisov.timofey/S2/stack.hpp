@@ -2,8 +2,8 @@
 #define STACK_HPP
 
 #include <cstddef>
-#include <list.hpp>
 #include <stdexcept>
+#include "../common/list.hpp"
 
 namespace alisov
 {
@@ -20,7 +20,7 @@ namespace alisov
     size_t size() const noexcept;
 
   private:
-    List< T > data_;
+    BiList< T > data_;
   };
 }
 
