@@ -12,7 +12,6 @@ namespace alisov
   {
   public:
     void push(const T &rhs);
-    T drop();
     T &get();
     const T &get() const;
     void pop();
@@ -28,17 +27,6 @@ template < class T >
 void alisov::Queue< T >::push(const T &rhs)
 {
   data_.push_back(rhs);
-}
-
-template < class T >
-T alisov::Queue< T >::drop()
-{
-  if (empty()) {
-    throw std::underflow_error("Queue is empty");
-  }
-  T value = data_.front();
-  data_.pop_front();
-  return value;
 }
 
 template < class T >
