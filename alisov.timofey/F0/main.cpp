@@ -356,6 +356,26 @@ public:
     }
     std::cout << ">\n";
   }
+
+  void link_offices(const std::string &post_name, const std::string &off1, const std::string &off2, double dist)
+  {
+    PostSystem *sys = systems.find(post_name);
+    if (sys == nullptr || dist < 0) {
+      std::cout << "<INVALID COMMAND>\n";
+      return;
+    }
+    Office *o1 = sys->offices.find(off1);
+    Office *o2 = sys->offices.find(off2);
+    if (o1 == nullptr || o2 == nullptr) {
+      std::cout << "<INVALID COMMAND>\n";
+      return;
+    }
+
+    o1->links.push_back({off2, dist, dist * 1.5, dist * 0.1});
+    o2->links.push_back({off1, dist, dist * 1.5, dist * 0.1});
+
+    std::cout << "<LINKED: " << off1 << " - " << off2 << ", DISTANCE: " << dist << ">\n";
+  }
 };
 
 int main()
