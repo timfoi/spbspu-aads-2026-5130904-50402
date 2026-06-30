@@ -17,6 +17,7 @@ struct Mail
 
 struct Link
 {
+  std::string to_post;
   std::string to_office;
   double distance = 0.0;
   double cost = 0.0;
@@ -359,22 +360,41 @@ public:
 
   void link_offices(const std::string &post_name, const std::string &off1, const std::string &off2, double dist)
   {
-    PostSystem *sys = systems.find(post_name);
-    if (sys == nullptr || dist < 0) {
-      std::cout << "<INVALID COMMAND>\n";
+    PostSystem *sys1 = systems.find(post_name);
+    if (sys1 == nullptr || dist < 0) {
+      std::cout << "<INVALID COMMAND>" << std::endl;
       return;
     }
-    Office *o1 = sys->offices.find(off1);
-    Office *o2 = sys->offices.find(off2);
-    if (o1 == nullptr || o2 == nullptr) {
-      std::cout << "<INVALID COMMAND>\n";
+    Office *o1 = sys1->offices.find(off1);
+    if (o1 == nullptr) {
+      std::cout << "<INVALID COMMAND>" << std::endl;
       return;
     }
 
-    o1->links.push_back({off2, dist, dist * 1.5, dist * 0.1});
-    o2->links.push_back({off1, dist, dist * 1.5, dist * 0.1});
+    PostSystem *sys2 = nullptr;
+    Office *o2 = nullptr;
 
-    std::cout << "<LINKED: " << off1 << " - " << off2 << ", DISTANCE: " << dist << ">\n";
+    auto &sys_table = systems.get_raw_table();
+    for (const auto &bucket : sys_table) {
+      if (bucket.state == BucketState::Occupied) {
+        Office *found = const_cast< PostSystem & >(bucket.value).offices.find(off2);
+        if (found != nullptr) {
+          sys2 = const_cast< PostSystem * >(&bucket.value);
+          o2 = found;
+          break;
+        }
+      }
+    }
+
+    if (o2 == nullptr) {
+      std::cout << "<INVALID COMMAND>" << std::endl;
+      return;
+    }
+
+    o1->links.push_back({sys2->name, off2, dist, dist * 1.5, dist * 0.1});
+    o2->links.push_back({sys1->name, off1, dist, dist * 1.5, dist * 0.1});
+
+    std::cout << "<LINKED: " << off1 << " - " << off2 << ", DISTANCE: " << dist << ">" << std::endl;
   }
 
   struct RouteResult
@@ -383,32 +403,45 @@ public:
     double total_metric = -1;
   };
 
-  RouteResult calculate(PostSystem *sys, const std::string &start, const std::string &target, int mode)
+  RouteResult calculate(const std::string &start_post, const std::string &start_office,
+                        const std::string &target_office, int mode)
   {
     struct NodeState
     {
-      std::string name;
+      std::string post;
+      std::string office;
       double dist = 1e9;
-      std::string parent = "";
+      std::string parent_post = "";
+      std::string parent_office = "";
       bool visited = false;
     };
 
     std::vector< NodeState > states;
-    auto &offices_table = sys->offices.get_raw_table();
-    for (const auto &b : offices_table) {
-      if (b.state == BucketState::Occupied) {
-        states.push_back({b.key, 1e9, "", false});
+    std::string target_post = "";
+
+    auto &sys_table = systems.get_raw_table();
+    for (const auto &sys_bucket : sys_table) {
+      if (sys_bucket.state == BucketState::Occupied) {
+        auto &offices_table = sys_bucket.value.offices.get_raw_table();
+        for (const auto &off_bucket : offices_table) {
+          if (off_bucket.state == BucketState::Occupied) {
+            states.push_back({sys_bucket.key, off_bucket.key, 1e9, "", "", false});
+            if (off_bucket.key == target_office) {
+              target_post = sys_bucket.key;
+            }
+          }
+        }
       }
     }
 
-    auto get_state = [&states](const std::string &name) -> NodeState * {
+    auto get_state = [&states](const std::string &p, const std::string &o) -> NodeState * {
       for (auto &s : states)
-        if (s.name == name)
+        if (s.post == p && s.office == o)
           return &s;
       return nullptr;
     };
 
-    NodeState *start_state = get_state(start);
+    NodeState *start_state = get_state(start_post, start_office);
     if (!start_state)
       return {{}, -1};
 
@@ -426,15 +459,18 @@ public:
         break;
       min_node->visited = true;
 
-      if (min_node->name == target)
+      if (min_node->office == target_office)
         break;
 
-      Office *off = sys->offices.find(min_node->name);
+      PostSystem *sys = systems.find(min_node->post);
+      if (!sys)
+        continue;
+      Office *off = sys->offices.find(min_node->office);
       if (!off)
         continue;
 
       for (const auto &link : off->links) {
-        NodeState *to_state = get_state(link.to_office);
+        NodeState *to_state = get_state(link.to_post, link.to_office);
         if (!to_state || to_state->visited)
           continue;
 
@@ -446,20 +482,21 @@ public:
 
         if (min_node->dist + weight < to_state->dist) {
           to_state->dist = min_node->dist + weight;
-          to_state->parent = min_node->name;
+          to_state->parent_post = min_node->post;
+          to_state->parent_office = min_node->office;
         }
       }
     }
 
-    NodeState *target_state = get_state(target);
+    NodeState *target_state = get_state(target_post, target_office);
     if (!target_state || target_state->dist >= 1e9)
       return {{}, -1};
 
     std::vector< std::string > path;
-    std::string curr = target;
-    while (curr != "") {
-      path.push_back(curr);
-      curr = get_state(curr)->parent;
+    NodeState *curr = target_state;
+    while (curr && curr->office != "") {
+      path.push_back(curr->office);
+      curr = get_state(curr->parent_post, curr->parent_office);
     }
     std::reverse(path.begin(), path.end());
 
@@ -471,10 +508,6 @@ public:
     PostSystem *sys = systems.find(post_name);
     Mail *m = global_mails.find(track_id);
     if (sys == nullptr || m == nullptr || m->current_post != post_name) {
-      std::cout << "<INVALID COMMAND>" << std::endl;
-      return;
-    }
-    if (sys->offices.find(target_office) == nullptr) {
       std::cout << "<INVALID COMMAND>" << std::endl;
       return;
     }
@@ -492,7 +525,7 @@ public:
       return;
     }
 
-    RouteResult res = calculate(sys, m->current_office, target_office, mode);
+    RouteResult res = calculate(m->current_post, m->current_office, target_office, mode);
     if (res.path.empty()) {
       std::cout << "<INVALID COMMAND>" << std::endl;
       return;
@@ -506,7 +539,33 @@ public:
     }
     std::cout << ", TOTAL " << metric_name << ": " << res.total_metric << ">" << std::endl;
 
-    move_mail(post_name, track_id, target_office);
+    std::string final_post = m->current_post;
+    auto &sys_table = systems.get_raw_table();
+    for (const auto &bucket : sys_table) {
+      if (bucket.state == BucketState::Occupied) {
+        if (const_cast< PostSystem & >(bucket.value).offices.find(target_office) != nullptr) {
+          final_post = bucket.key;
+          break;
+        }
+      }
+    }
+
+    Office *old_off = sys->offices.find(m->current_office);
+    if (old_off) {
+      auto &v = old_off->local_mail_ids;
+      v.erase(std::remove(v.begin(), v.end(), track_id), v.end());
+    }
+
+    m->current_post = final_post;
+    m->current_office = target_office;
+
+    PostSystem *final_sys = systems.find(final_post);
+    if (final_sys) {
+      Office *new_off = final_sys->offices.find(target_office);
+      if (new_off) {
+        new_off->local_mail_ids.push_back(track_id);
+      }
+    }
   }
 };
 
