@@ -466,22 +466,35 @@ public:
     return {path, target_state->dist};
   }
   void route_mail(const std::string &post_name, const std::string &track_id, const std::string &target_office,
-                  int mode = 0)
+                  const std::string &type)
   {
     PostSystem *sys = systems.find(post_name);
     Mail *m = global_mails.find(track_id);
     if (sys == nullptr || m == nullptr || m->current_post != post_name) {
-      std::cout << "<INVALID COMMAND>\n";
+      std::cout << "<INVALID COMMAND>" << std::endl;
       return;
     }
     if (sys->offices.find(target_office) == nullptr) {
-      std::cout << "<INVALID COMMAND>\n";
+      std::cout << "<INVALID COMMAND>" << std::endl;
+      return;
+    }
+
+    int mode = 0;
+    std::string metric_name = "DISTANCE";
+    if (type == "cheap") {
+      mode = 1;
+      metric_name = "COST";
+    } else if (type == "fast") {
+      mode = 2;
+      metric_name = "TIME";
+    } else if (type != "short") {
+      std::cout << "<INVALID COMMAND>" << std::endl;
       return;
     }
 
     RouteResult res = calculate(sys, m->current_office, target_office, mode);
     if (res.path.empty()) {
-      std::cout << "<INVALID COMMAND>\n";
+      std::cout << "<INVALID COMMAND>" << std::endl;
       return;
     }
 
@@ -491,7 +504,7 @@ public:
       if (i + 1 < res.path.size())
         std::cout << " -> ";
     }
-    std::cout << ", TOTAL DISTANCE: " << res.total_metric << ">\n";
+    std::cout << ", TOTAL " << metric_name << ": " << res.total_metric << ">" << std::endl;
 
     move_mail(post_name, track_id, target_office);
   }
@@ -543,9 +556,9 @@ void process_commands()
       std::cin >> p_name >> o1 >> o2 >> d;
       manager.link_offices(p_name, o1, o2, d);
     } else if (cmd == "route-mail") {
-      std::string p_name, t_id, t_off;
-      std::cin >> p_name >> t_id >> t_off;
-      manager.route_mail(p_name, t_id, t_off, 0);
+      std::string p_name, t_id, t_off, type;
+      std::cin >> p_name >> t_id >> t_off >> type;
+      manager.route_mail(p_name, t_id, t_off, type);
     } else {
       std::cout << "<INVALID COMMAND>\n";
     }
