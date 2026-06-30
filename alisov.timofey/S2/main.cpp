@@ -176,3 +176,27 @@ namespace alisov
   }
 
 }
+
+int main(int argc, char *argv[])
+{
+  if (argc > 2) {
+    std::cerr << "Usage: " << argv[0] << " {filename}\n";
+    return 1;
+  }
+
+  try {
+    if (argc == 2) {
+      std::ifstream file(argv[1]);
+      if (!file.is_open()) {
+        std::cerr << "Cannot open file: " << argv[1] << "\n";
+        return 1;
+      }
+      alisov::processExpressions(file);
+    } else {
+      alisov::processExpressions(std::cin);
+    }
+  } catch (const std::exception &e) {
+    std::cerr << "Error: " << e.what() << "\n";
+    return 1;
+  }
+}
