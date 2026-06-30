@@ -114,6 +114,53 @@ namespace alisov
     {
       return contains(k);
     }
+    Value &at(const Key &k)
+    {
+      if (slots_count_ == 0) {
+        throw std::out_of_range("Not found");
+      }
+      size_t idx = getBucketIndex(k);
+      for (size_t i = 0; i < buckets_[idx].size(); ++i) {
+        if (equal_(buckets_[idx][i].key, k)) {
+          return buckets_[idx][i].value;
+        }
+      }
+      throw std::out_of_range("Not found");
+    }
+
+    const Value &at(const Key &k) const
+    {
+      if (slots_count_ == 0) {
+        throw std::out_of_range("Not found");
+      }
+      size_t idx = getBucketIndex(k);
+      for (size_t i = 0; i < buckets_[idx].size(); ++i) {
+        if (equal_(buckets_[idx][i].key, k)) {
+          return buckets_[idx][i].value;
+        }
+      }
+      throw std::out_of_range("Not found");
+    }
+
+    Value &operator[](const Key &k)
+    {
+      if (slots_count_ == 0) {
+        slots_count_ = 16;
+        buckets_.reserve(16);
+        for (size_t i = 0; i < 16; ++i) {
+          buckets_.push_back(Vector< Node >());
+        }
+      }
+      size_t idx = getBucketIndex(k);
+      for (size_t i = 0; i < buckets_[idx].size(); ++i) {
+        if (equal_(buckets_[idx][i].key, k)) {
+          return buckets_[idx][i].value;
+        }
+      }
+      buckets_[idx].push_back(Node(k, Value()));
+      ++element_count_;
+      return buckets_[idx][buckets_[idx].size() - 1].value;
+    }
   };
 }
 
