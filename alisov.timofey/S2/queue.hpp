@@ -1,15 +1,21 @@
-#include <iostream>
 #ifndef QUEUE_HPP
 #define QUEUE_HPP
 
+#include <cstddef>
+#include <stdexcept>
+#include "list.hpp"
+
 namespace alisov
 {
-  template < class T > class Queue
+  template < class T >
+  class Queue
   {
   public:
     void push(const T &rhs);
-    T &get() noexcept;
-    void pop() noexcept;
+    T drop();
+    T &get();
+    const T &get() const;
+    void pop();
     bool empty() const noexcept;
     size_t size() const noexcept;
 
@@ -17,12 +23,59 @@ namespace alisov
     List< T > data_;
   };
 }
-template < class T > bool alisov::Queue< T >::empty() const noexcept
+
+template < class T >
+void alisov::Queue< T >::push(const T &rhs)
 {
-  return !data_.size();
+  data_.push_back(rhs);
 }
 
-template < class T > size_t alisov::Queue< T >::size() const noexcept
+template < class T >
+T alisov::Queue< T >::drop()
+{
+  if (empty()) {
+    throw std::underflow_error("Queue is empty");
+  }
+  T value = data_.front();
+  data_.pop_front();
+  return value;
+}
+
+template < class T >
+T &alisov::Queue< T >::get()
+{
+  if (empty()) {
+    throw std::underflow_error("Queue is empty");
+  }
+  return data_.front();
+}
+
+template < class T >
+const T &alisov::Queue< T >::get() const
+{
+  if (empty()) {
+    throw std::underflow_error("Queue is empty");
+  }
+  return data_.front();
+}
+
+template < class T >
+void alisov::Queue< T >::pop()
+{
+  if (empty()) {
+    throw std::underflow_error("Queue is empty");
+  }
+  data_.pop_front();
+}
+
+template < class T >
+bool alisov::Queue< T >::empty() const noexcept
+{
+  return data_.empty();
+}
+
+template < class T >
+size_t alisov::Queue< T >::size() const noexcept
 {
   return data_.size();
 }
