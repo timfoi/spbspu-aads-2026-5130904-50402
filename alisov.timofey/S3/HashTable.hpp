@@ -69,6 +69,51 @@ namespace alisov
     {
       return element_count_ == 0;
     }
+    bool insert(const Key &k, const Value &v)
+    {
+      if (slots_count_ == 0) {
+        slots_count_ = 16;
+        buckets_.reserve(16);
+        for (size_t i = 0; i < 16; ++i) {
+          buckets_.push_back(Vector< Node >());
+        }
+      }
+      size_t idx = getBucketIndex(k);
+      for (size_t i = 0; i < buckets_[idx].size(); ++i) {
+        if (equal_(buckets_[idx][i].key, k)) {
+          return false;
+        }
+      }
+      buckets_[idx].push_back(Node(k, v));
+      ++element_count_;
+      return true;
+    }
+
+    void add(Key k, Value v)
+    {
+      if (!insert(k, v)) {
+        throw std::runtime_error("Key duplicate");
+      }
+    }
+
+    bool contains(const Key &k) const
+    {
+      if (slots_count_ == 0) {
+        return false;
+      }
+      size_t idx = getBucketIndex(k);
+      for (size_t i = 0; i < buckets_[idx].size(); ++i) {
+        if (equal_(buckets_[idx][i].key, k)) {
+          return true;
+        }
+      }
+      return false;
+    }
+
+    bool has(Key k)
+    {
+      return contains(k);
+    }
   };
 }
 
