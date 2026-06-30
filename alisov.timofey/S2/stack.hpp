@@ -4,7 +4,8 @@
 
 namespace alisov
 {
-  template < class T > class Stack
+  template < class T >
+  class Stack
   {
   public:
     void push(const T &rhs);
@@ -17,12 +18,14 @@ namespace alisov
     List< T > data_;
   };
 }
-template < class T > bool alisov::Stack< T >::empty() const noexcept
+template < class T >
+bool alisov::Stack< T >::empty() const noexcept
 {
   return !data_.size();
 }
 
-template < class T > size_t alisov::Stack< T >::size() const noexcept
+template < class T >
+size_t alisov::Stack< T >::size() const noexcept
 {
   return data_.size();
 }
