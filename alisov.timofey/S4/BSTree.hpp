@@ -118,6 +118,10 @@ namespace alisov
     const_iterator cend() const;
     size_t height(const_iterator it);
     size_t height();
+    const_iterator rotateLeft(const_iterator it);
+    const_iterator rotateRight(const_iterator it);
+    const_iterator rotateLargeLeft(const_iterator it);
+    const_iterator rotateLargeRight(const_iterator it);
 
   private:
     friend class BSTIterator< Key, Value, Compare >;
@@ -505,6 +509,79 @@ namespace alisov
   typename BSTree< Key, Value, Compare >::iterator BSTree< Key, Value, Compare >::end()
   {
     return iterator(cend());
+  }
+  template < class Key, class Value, class Compare >
+  BSTConstIterator< Key, Value, Compare > BSTree< Key, Value, Compare >::rotateLeft(const_iterator it)
+  {
+    Node *y = const_cast< Node * >(it.curr_);
+    if (!y || y == nilNode() || y->parent == root_ || y->parent->parent == y->parent || y->parent->rt != y) {
+      throw std::logic_error("Rotate Left impossible for this tree");
+    }
+    Node *x = y->parent;
+    Node *t2 = y->lt;
+    y->parent = x->parent;
+    if (x->parent->lt == x) {
+      x->parent->lt = y;
+    } else {
+      x->parent->rt = y;
+    }
+    y->lt = x;
+    x->parent = y;
+    x->rt = t2;
+    if (t2 != nilNode()) {
+      t2->parent = x;
+    }
+    return const_iterator{t2};
+  }
+
+  template < class Key, class Value, class Compare >
+  BSTConstIterator< Key, Value, Compare > BSTree< Key, Value, Compare >::rotateRight(const_iterator it)
+  {
+    Node *x = const_cast< Node * >(it.curr_);
+    if (!x || x == nilNode() || x->parent == root_ || x->parent->parent == x->parent || x->parent->lt != x) {
+      throw std::logic_error("Rotate Right impossible for this tree");
+    }
+    Node *y = x->parent;
+    Node *t2 = x->rt;
+    x->parent = y->parent;
+    if (y->parent->lt == y) {
+      y->parent->lt = x;
+    } else {
+      y->parent->rt = x;
+    }
+    x->rt = y;
+    y->parent = x;
+    y->lt = t2;
+    if (t2 != nilNode()) {
+      t2->parent = y;
+    }
+    return const_iterator{t2};
+  }
+
+  template < class Key, class Value, class Compare >
+  BSTConstIterator< Key, Value, Compare > BSTree< Key, Value, Compare >::rotateLargeLeft(const_iterator it)
+  {
+    Node *y = const_cast< Node * >(it.curr_);
+    if (!y || y == nilNode() || y->parent == root_ || y->parent->parent == root_
+        || y->parent->parent->parent == y->parent->parent || y->parent->lt != y || y->parent->parent->rt != y->parent) {
+      throw std::logic_error("Rotate Large Left impossible for this tree");
+    }
+    const_iterator ret = rotateRight(it);
+    rotateLeft(it);
+    return ret;
+  }
+
+  template < class Key, class Value, class Compare >
+  BSTConstIterator< Key, Value, Compare > BSTree< Key, Value, Compare >::rotateLargeRight(const_iterator it)
+  {
+    Node *y = const_cast< Node * >(it.curr_);
+    if (!y || y == nilNode() || y->parent == root_ || y->parent->parent == root_
+        || y->parent->parent->parent == y->parent->parent || y->parent->rt != y || y->parent->parent->lt != y->parent) {
+      throw std::logic_error("Rotate Large Right impossible for this tree");
+    }
+    const_iterator ret = rotateLeft(it);
+    rotateRight(it);
+    return ret;
   }
 }
 #endif
