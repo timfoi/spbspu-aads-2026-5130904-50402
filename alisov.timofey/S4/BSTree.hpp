@@ -110,6 +110,14 @@ namespace alisov
     bool insert(Key k, Value v);
     Value &operator[](Key key);
     bool erase(Key k);
+    iterator begin();
+    const_iterator begin() const;
+    const_iterator cbegin() const;
+    iterator end();
+    const_iterator end() const;
+    const_iterator cend() const;
+    size_t height(const_iterator it);
+    size_t height();
 
   private:
     friend class BSTIterator< Key, Value, Compare >;
@@ -440,6 +448,63 @@ namespace alisov
     }
     eraseNode(target);
     return true;
+  }
+  template < class Key, class Value, class Compare >
+  size_t BSTree< Key, Value, Compare >::height(const_iterator it)
+  {
+    if (!it.curr_ || it.curr_ == root_ || it.curr_->parent == it.curr_) {
+      return 0;
+    }
+    return std::max(height(const_iterator{it.curr_->lt}), height(const_iterator{it.curr_->rt})) + 1;
+  }
+
+  template < class Key, class Value, class Compare >
+  size_t BSTree< Key, Value, Compare >::height()
+  {
+    return height(const_iterator{root_->lt});
+  }
+
+  template < class Key, class Value, class Compare >
+  BSTConstIterator< Key, Value, Compare > BSTree< Key, Value, Compare >::cbegin() const
+  {
+    if (empty()) {
+      return cend();
+    }
+    typename BSTree< Key, Value, Compare >::Node *curr = root_->lt;
+    while (curr->lt != nilNode()) {
+      curr = curr->lt;
+    }
+    return const_iterator{curr};
+  }
+
+  template < class Key, class Value, class Compare >
+  BSTConstIterator< Key, Value, Compare > BSTree< Key, Value, Compare >::cend() const
+  {
+    return const_iterator{root_};
+  }
+
+  template < class Key, class Value, class Compare >
+  BSTConstIterator< Key, Value, Compare > BSTree< Key, Value, Compare >::begin() const
+  {
+    return cbegin();
+  }
+
+  template < class Key, class Value, class Compare >
+  BSTConstIterator< Key, Value, Compare > BSTree< Key, Value, Compare >::end() const
+  {
+    return cend();
+  }
+
+  template < class Key, class Value, class Compare >
+  typename BSTree< Key, Value, Compare >::iterator BSTree< Key, Value, Compare >::begin()
+  {
+    return iterator(cbegin());
+  }
+
+  template < class Key, class Value, class Compare >
+  typename BSTree< Key, Value, Compare >::iterator BSTree< Key, Value, Compare >::end()
+  {
+    return iterator(cend());
   }
 }
 #endif
