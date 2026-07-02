@@ -95,6 +95,9 @@ namespace alisov
     BSTree(const BSTree &rhs);
     BSTree(BSTree &&rhs);
     ~BSTree();
+    BSTree &operator=(const BSTree &rhs);
+    BSTree &operator=(BSTree &&rhs);
+    void swap(BSTree &rhs);
 
     using const_iterator = BSTConstIterator< Key, Value, Compare >;
     using iterator = BSTIterator< Key, Value, Compare >;
@@ -106,6 +109,7 @@ namespace alisov
     const Value &at(Key key) const;
     bool insert(Key k, Value v);
     Value &operator[](Key key);
+    bool erase(Key k);
 
   private:
     friend class BSTIterator< Key, Value, Compare >;
@@ -119,6 +123,7 @@ namespace alisov
     void clear(Node *curr);
     void copyTree(Node *root, Node **result, Node *parent = nullptr);
     Node *findNode(Key key) const;
+    void eraseNode(Node *node);
   };
 
   template < class Key, class Value, class Compare >
@@ -347,6 +352,94 @@ namespace alisov
     }
     insert(key, Value());
     return findNode(key)->value;
+  }
+  template < class Key, class Value, class Compare >
+  void BSTree< Key, Value, Compare >::swap(BSTree< Key, Value, Compare > &rhs)
+  {
+    if (this == &rhs) {
+      return;
+    }
+    using std::swap;
+    swap(root_->lt, rhs.root_->lt);
+    swap(cmp_, rhs.cmp_);
+    if (root_->lt != nilNode()) {
+      root_->lt->parent = root_;
+    }
+    if (rhs.root_->lt != nilNode()) {
+      rhs.root_->lt->parent = rhs.root_;
+    }
+  }
+
+  template < class Key, class Value, class Compare >
+  BSTree< Key, Value, Compare > &BSTree< Key, Value, Compare >::operator=(const BSTree &rhs)
+  {
+    if (this == &rhs) {
+      return *this;
+    }
+    BSTree tmp(rhs);
+    swap(tmp);
+    return *this;
+  }
+
+  template < class Key, class Value, class Compare >
+  BSTree< Key, Value, Compare > &BSTree< Key, Value, Compare >::operator=(BSTree &&rhs)
+  {
+    if (this == &rhs) {
+      return *this;
+    }
+    swap(rhs);
+    return *this;
+  }
+  template < class Key, class Value, class Compare >
+  void BSTree< Key, Value, Compare >::eraseNode(Node *target)
+  {
+    if (target->lt == nilNode() && target->rt == nilNode()) {
+      if (target->parent->lt == target) {
+        target->parent->lt = nilNode();
+      } else {
+        target->parent->rt = nilNode();
+      }
+      delete target;
+    } else if (target->lt != nilNode() && target->rt == nilNode()) {
+      Node *child = target->lt;
+      child->parent = target->parent;
+      if (target->parent->lt == target) {
+        target->parent->lt = child;
+      } else {
+        target->parent->rt = child;
+      }
+      delete target;
+    } else if (target->lt == nilNode() && target->rt != nilNode()) {
+      Node *child = target->rt;
+      child->parent = target->parent;
+      if (target->parent->lt == target) {
+        target->parent->lt = child;
+      } else {
+        target->parent->rt = child;
+      }
+      delete target;
+    } else {
+      Node *curr = target->rt;
+      while (curr->lt != nilNode()) {
+        curr = curr->lt;
+      }
+      Key key = curr->key;
+      Value value = curr->value;
+      eraseNode(curr);
+      target->key = key;
+      target->value = value;
+    }
+  }
+
+  template < class Key, class Value, class Compare >
+  bool BSTree< Key, Value, Compare >::erase(Key k)
+  {
+    Node *target = findNode(k);
+    if (target == nilNode()) {
+      return false;
+    }
+    eraseNode(target);
+    return true;
   }
 }
 #endif
