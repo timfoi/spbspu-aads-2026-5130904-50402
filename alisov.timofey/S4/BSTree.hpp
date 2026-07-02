@@ -79,6 +79,7 @@ namespace alisov
     friend class BSTIterator< Key, Value, Compare >;
     friend class BSTree< Key, Value, Compare >;
   };
+
   template < class Key, class Value, class Compare = std::less< Key > >
   class BSTree
   {
@@ -91,6 +92,8 @@ namespace alisov
     };
 
     BSTree();
+    BSTree(const BSTree &rhs);
+    BSTree(BSTree &&rhs);
     ~BSTree();
 
     using const_iterator = BSTConstIterator< Key, Value, Compare >;
@@ -108,6 +111,7 @@ namespace alisov
 
     static Node *nilNode();
     void clear(Node *curr);
+    void copyTree(Node *root, Node **result, Node *parent = nullptr);
   };
 
   template < class Key, class Value, class Compare >
@@ -154,6 +158,7 @@ namespace alisov
     clear(root_->lt);
     root_->lt = nilNode();
   }
+
   template < class Key, class Value, class Compare >
   BSTIterator< Key, Value, Compare >::BSTIterator(const BSTConstIterator< Key, Value, Compare > &rhs):
     curr_(const_cast< typename BSTree< Key, Value, Compare >::Node * >(rhs.curr_))
@@ -214,6 +219,52 @@ namespace alisov
     }
     this->curr_ = next;
     return *this;
+  }
+
+  template < class Key, class Value, class Compare >
+  BSTree< Key, Value, Compare >::BSTree(BSTree &&rhs):
+    fake_root_{Key(), Value(), nullptr, nullptr, nullptr},
+    root_(&fake_root_),
+    cmp_(std::move(rhs.cmp_))
+  {
+    root_->lt = rhs.root_->lt;
+    root_->rt = nilNode();
+    root_->parent = nullptr;
+    if (root_->lt != nilNode()) {
+      root_->lt->parent = root_;
+    }
+    rhs.root_->lt = nilNode();
+  }
+
+  template < class Key, class Value, class Compare >
+  BSTree< Key, Value, Compare >::BSTree(const BSTree &rhs):
+    fake_root_{Key(), Value(), nullptr, nullptr, nullptr},
+    root_(&fake_root_),
+    cmp_(rhs.cmp_)
+  {
+    root_->lt = nilNode();
+    root_->rt = nilNode();
+    root_->parent = nullptr;
+    copyTree(rhs.root_->lt, &(root_->lt), root_);
+  }
+
+  template < class Key, class Value, class Compare >
+  void BSTree< Key, Value, Compare >::copyTree(Node *root, Node **result, Node *parent)
+  {
+    if (root == nilNode()) {
+      *result = nilNode();
+      return;
+    }
+    Node *newRoot = new Node{root->key, root->value, nilNode(), nilNode(), parent};
+    try {
+      copyTree(root->lt, &(newRoot->lt), newRoot);
+      copyTree(root->rt, &(newRoot->rt), newRoot);
+    } catch (const std::bad_alloc &) {
+      clear(newRoot);
+      *result = nilNode();
+      throw;
+    }
+    *result = newRoot;
   }
 }
 #endif
