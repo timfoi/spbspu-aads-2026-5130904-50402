@@ -154,5 +154,66 @@ namespace alisov
     clear(root_->lt);
     root_->lt = nilNode();
   }
+  template < class Key, class Value, class Compare >
+  BSTIterator< Key, Value, Compare >::BSTIterator(const BSTConstIterator< Key, Value, Compare > &rhs):
+    curr_(const_cast< typename BSTree< Key, Value, Compare >::Node * >(rhs.curr_))
+  {}
+
+  template < class Key, class Value, class Compare >
+  BSTConstIterator< Key, Value, Compare >::BSTConstIterator(const BSTIterator< Key, Value, Compare > &rhs):
+    curr_(rhs.curr_)
+  {}
+
+  template < class Key, class Value, class Compare >
+  BSTIterator< Key, Value, Compare > &BSTIterator< Key, Value, Compare >::operator++()
+  {
+    using node_t = typename BSTree< Key, Value, Compare >::Node *;
+    if (!curr_ || curr_->parent == nullptr || curr_->parent == curr_) {
+      return *this;
+    }
+    node_t next = nullptr;
+    if (curr_->rt->parent != curr_->rt) {
+      next = curr_->rt;
+      while (next->lt->parent != next->lt) {
+        next = next->lt;
+      }
+    } else {
+      node_t parent = curr_->parent;
+      node_t c = curr_;
+      while (parent && c == parent->rt) {
+        c = parent;
+        parent = parent->parent;
+      }
+      next = parent;
+    }
+    this->curr_ = next;
+    return *this;
+  }
+
+  template < class Key, class Value, class Compare >
+  BSTConstIterator< Key, Value, Compare > &BSTConstIterator< Key, Value, Compare >::operator++()
+  {
+    using node_t = typename BSTree< Key, Value, Compare >::Node *;
+    if (!curr_ || curr_->parent == nullptr || curr_->parent == curr_) {
+      return *this;
+    }
+    node_t next = nullptr;
+    if (curr_->rt->parent != curr_->rt) {
+      next = curr_->rt;
+      while (next->lt->parent != next->lt) {
+        next = next->lt;
+      }
+    } else {
+      node_t parent = curr_->parent;
+      node_t c = const_cast< node_t >(curr_);
+      while (parent && c == parent->rt) {
+        c = parent;
+        parent = parent->parent;
+      }
+      next = parent;
+    }
+    this->curr_ = next;
+    return *this;
+  }
 }
 #endif
