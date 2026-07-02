@@ -79,5 +79,80 @@ namespace alisov
     friend class BSTIterator< Key, Value, Compare >;
     friend class BSTree< Key, Value, Compare >;
   };
+  template < class Key, class Value, class Compare = std::less< Key > >
+  class BSTree
+  {
+  public:
+    struct Node
+    {
+      Key key;
+      Value value;
+      Node *lt, *rt, *parent;
+    };
+
+    BSTree();
+    ~BSTree();
+
+    using const_iterator = BSTConstIterator< Key, Value, Compare >;
+    using iterator = BSTIterator< Key, Value, Compare >;
+
+    bool empty() const noexcept;
+
+  private:
+    friend class BSTIterator< Key, Value, Compare >;
+    friend class BSTConstIterator< Key, Value, Compare >;
+
+    Node fake_root_;
+    Node *root_;
+    Compare cmp_;
+
+    static Node *nilNode();
+    void clear(Node *curr);
+  };
+
+  template < class Key, class Value, class Compare >
+  typename BSTree< Key, Value, Compare >::Node *BSTree< Key, Value, Compare >::nilNode()
+  {
+    static Node node{Key(), Value(), nullptr, nullptr, nullptr};
+    node.lt = &node;
+    node.rt = &node;
+    node.parent = &node;
+    return &node;
+  }
+
+  template < class Key, class Value, class Compare >
+  BSTree< Key, Value, Compare >::BSTree():
+    fake_root_{Key(), Value(), nullptr, nullptr, nullptr},
+    root_(&fake_root_),
+    cmp_(Compare())
+  {
+    root_->lt = nilNode();
+    root_->rt = nilNode();
+    root_->parent = nullptr;
+  }
+
+  template < class Key, class Value, class Compare >
+  bool BSTree< Key, Value, Compare >::empty() const noexcept
+  {
+    return root_->lt == nilNode();
+  }
+
+  template < class Key, class Value, class Compare >
+  void BSTree< Key, Value, Compare >::clear(Node *curr)
+  {
+    if (!curr || curr == root_ || curr == nilNode()) {
+      return;
+    }
+    clear(curr->lt);
+    clear(curr->rt);
+    delete curr;
+  }
+
+  template < class Key, class Value, class Compare >
+  BSTree< Key, Value, Compare >::~BSTree()
+  {
+    clear(root_->lt);
+    root_->lt = nilNode();
+  }
 }
 #endif
