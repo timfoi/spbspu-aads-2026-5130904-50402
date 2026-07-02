@@ -101,6 +101,10 @@ namespace alisov
 
     bool empty() const noexcept;
 
+    bool contains(Key k);
+    Value &at(Key key);
+    const Value &at(Key key) const;
+
   private:
     friend class BSTIterator< Key, Value, Compare >;
     friend class BSTConstIterator< Key, Value, Compare >;
@@ -112,6 +116,7 @@ namespace alisov
     static Node *nilNode();
     void clear(Node *curr);
     void copyTree(Node *root, Node **result, Node *parent = nullptr);
+    Node *findNode(Key key) const;
   };
 
   template < class Key, class Value, class Compare >
@@ -265,6 +270,45 @@ namespace alisov
       throw;
     }
     *result = newRoot;
+  }
+  template < class Key, class Value, class Compare >
+  typename BSTree< Key, Value, Compare >::Node *BSTree< Key, Value, Compare >::findNode(Key key) const
+  {
+    Node *curr = root_->lt;
+    while (curr != nilNode()) {
+      if (cmp_(key, curr->key)) {
+        curr = curr->lt;
+      } else if (cmp_(curr->key, key)) {
+        curr = curr->rt;
+      } else {
+        return curr;
+      }
+    }
+    return nilNode();
+  }
+
+  template < class Key, class Value, class Compare >
+  bool BSTree< Key, Value, Compare >::contains(Key key)
+  {
+    return findNode(key) != nilNode();
+  }
+
+  template < class Key, class Value, class Compare >
+  const Value &BSTree< Key, Value, Compare >::at(Key key) const
+  {
+    Node *curr = findNode(key);
+    if (curr == nilNode()) {
+      throw std::out_of_range("Undefined key");
+    }
+    return curr->value;
+  }
+
+  template < class Key, class Value, class Compare >
+  Value &BSTree< Key, Value, Compare >::at(Key key)
+  {
+    const BSTree< Key, Value, Compare > *cthis = this;
+    const Value &ret = cthis->at(key);
+    return const_cast< Value & >(ret);
   }
 }
 #endif
