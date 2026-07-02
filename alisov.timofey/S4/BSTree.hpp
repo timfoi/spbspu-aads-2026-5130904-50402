@@ -104,6 +104,8 @@ namespace alisov
     bool contains(Key k);
     Value &at(Key key);
     const Value &at(Key key) const;
+    bool insert(Key k, Value v);
+    Value &operator[](Key key);
 
   private:
     friend class BSTIterator< Key, Value, Compare >;
@@ -309,6 +311,42 @@ namespace alisov
     const BSTree< Key, Value, Compare > *cthis = this;
     const Value &ret = cthis->at(key);
     return const_cast< Value & >(ret);
+  }
+  template < class Key, class Value, class Compare >
+  bool BSTree< Key, Value, Compare >::insert(Key key, Value value)
+  {
+    Node *parent = root_;
+    Node *curr = root_->lt;
+    while (curr != nilNode()) {
+      parent = curr;
+      if (cmp_(key, curr->key)) {
+        curr = curr->lt;
+      } else if (cmp_(curr->key, key)) {
+        curr = curr->rt;
+      } else {
+        return false;
+      }
+    }
+    Node *node = new Node{key, value, nilNode(), nilNode(), parent};
+    if (parent == root_) {
+      root_->lt = node;
+    } else if (cmp_(key, parent->key)) {
+      parent->lt = node;
+    } else {
+      parent->rt = node;
+    }
+    return true;
+  }
+
+  template < class Key, class Value, class Compare >
+  Value &BSTree< Key, Value, Compare >::operator[](Key key)
+  {
+    Node *node = findNode(key);
+    if (node != nilNode()) {
+      return node->value;
+    }
+    insert(key, Value());
+    return findNode(key)->value;
   }
 }
 #endif
