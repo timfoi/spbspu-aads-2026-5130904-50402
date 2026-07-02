@@ -3,9 +3,11 @@
 
 namespace alisov
 {
-  template < class T > class BiList;
+  template < class T >
+  class BiList;
 
-  template < class T > class BLIter
+  template < class T >
+  class BLIter
   {
   public:
     bool operator==(const BLIter< T > &other);
@@ -19,7 +21,8 @@ namespace alisov
     const typename BiList< T >::Node *curr = nullptr;
   };
 
-  template < class T > class BLCIter
+  template < class T >
+  class BLCIter
   {
   public:
     bool operator==(BLCIter< T > other);
@@ -33,7 +36,8 @@ namespace alisov
     const typename BiList< T >::Node *curr = nullptr;
   };
 
-  template < class T > class BiList
+  template < class T >
+  class BiList
   {
   public:
     struct Node
