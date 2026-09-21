@@ -360,10 +360,8 @@ namespace alisov
       }
 
       size_t mail_count = 0;
-      for (const auto pair : global_mails) {
-        if (pair.second.current_post == post_name) {
-          mail_count++;
-        }
+      for (auto off_pair : sys->offices) {
+        mail_count += off_pair.second.local_mail_ids.size();
       }
 
       std::cout << "<OFFICES: " << sys->offices.size() << ", MAILS: " << mail_count << ">\n";
