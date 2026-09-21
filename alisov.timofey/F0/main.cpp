@@ -343,8 +343,7 @@ namespace alisov
     void make_post(const std::string &post_name)
     {
       if (systems.find(post_name) != nullptr) {
-        std::cout << "<INVALID COMMAND>\n";
-        return;
+        throw std::invalid_argument("Already exist");
       }
       PostSystem new_system;
       new_system.name = post_name;
@@ -355,8 +354,7 @@ namespace alisov
     {
       PostSystem *sys = systems.find(post_name);
       if (sys == nullptr) {
-        std::cout << "<INVALID COMMAND>\n";
-        return;
+        throw std::invalid_argument("Post not found");
       }
 
       size_t mail_count = 0;
@@ -373,8 +371,7 @@ namespace alisov
     {
       PostSystem *sys = systems.find(post_name);
       if (sys == nullptr || sys->offices.find(office_name) != nullptr) {
-        std::cout << "<INVALID COMMAND>\n";
-        return;
+        throw std::invalid_argument("Invalid post or duplicate");
       }
       Office off;
       off.name = office_name;
@@ -385,13 +382,11 @@ namespace alisov
     {
       PostSystem *sys = systems.find(post_name);
       if (sys == nullptr) {
-        std::cout << "<INVALID COMMAND>\n";
-        return;
+        throw std::invalid_argument("Post not found");
       }
       Office *off = sys->offices.find(office_name);
       if (off == nullptr) {
-        std::cout << "<INVALID COMMAND>\n";
-        return;
+        throw std::invalid_argument("Office not found");
       }
       std::cout << "<NAME: " << off->name << ", MAILS: " << off->local_mail_ids.size() << ">\n";
     }
@@ -401,13 +396,11 @@ namespace alisov
     {
       PostSystem *sys = systems.find(post_name);
       if (sys == nullptr || weight <= 0) {
-        std::cout << "<INVALID COMMAND>\n";
-        return;
+        throw std::invalid_argument("Invalid weight or post");
       }
       Office *off = sys->offices.find(office_name);
       if (off == nullptr || global_mails.find(track_id) != nullptr) {
-        std::cout << "<INVALID COMMAND>\n";
-        return;
+        throw std::invalid_argument("Invalid office or duplicate ID");
       }
 
       Mail m;
@@ -425,8 +418,7 @@ namespace alisov
       PostSystem *sys = systems.find(post_name);
       Mail *m = global_mails.find(track_id);
       if (sys == nullptr || m == nullptr || m->current_post != post_name) {
-        std::cout << "<INVALID COMMAND>\n";
-        return;
+        throw std::invalid_argument("Mail not found in this post");
       }
       std::cout << "<TRACK: " << m->track_id << ", OFFICE: " << m->current_office << ", WEIGHT: " << m->weight << ">\n";
     }
@@ -436,14 +428,12 @@ namespace alisov
       PostSystem *sys = systems.find(post_name);
       Mail *m = global_mails.find(track_id);
       if (sys == nullptr || m == nullptr || m->current_post != post_name) {
-        std::cout << "<INVALID COMMAND>\n";
-        return;
+        throw std::invalid_argument("Invalid system or mail ownership");
       }
       Office *old_off = sys->offices.find(m->current_office);
       Office *new_off = sys->offices.find(new_office_name);
       if (old_off == nullptr || new_off == nullptr) {
-        std::cout << "<INVALID COMMAND>\n";
-        return;
+        throw std::invalid_argument("Invalid source or target office");
       }
 
       auto &v = old_off->local_mail_ids;
@@ -456,8 +446,7 @@ namespace alisov
     void find_weight(const std::string &post_name, double left, double right)
     {
       if (systems.find(post_name) == nullptr || left > right) {
-        std::cout << "<INVALID COMMAND>\n";
-        return;
+        throw std::invalid_argument("Invalid bounds or post");
       }
 
       std::vector< Mail > result;
@@ -486,13 +475,11 @@ namespace alisov
     {
       PostSystem *sys1 = systems.find(post_name);
       if (sys1 == nullptr || dist < 0) {
-        std::cout << "<INVALID COMMAND>" << std::endl;
-        return;
+        throw std::invalid_argument("Invalid distance or post");
       }
       Office *o1 = sys1->offices.find(off1);
       if (o1 == nullptr) {
-        std::cout << "<INVALID COMMAND>" << std::endl;
-        return;
+        throw std::invalid_argument("Office 1 not found");
       }
 
       PostSystem *sys2 = nullptr;
@@ -508,8 +495,7 @@ namespace alisov
       }
 
       if (o2 == nullptr) {
-        std::cout << "<INVALID COMMAND>" << std::endl;
-        return;
+        throw std::invalid_argument("Office 2 not found");
       }
 
       o1->links.push_back({sys2->name, off2, dist, dist * 1.5, dist * 0.1});
@@ -624,8 +610,7 @@ namespace alisov
       PostSystem *sys = systems.find(post_name);
       Mail *m = global_mails.find(track_id);
       if (sys == nullptr || m == nullptr || m->current_post != post_name) {
-        std::cout << "<INVALID COMMAND>" << std::endl;
-        return;
+        throw std::invalid_argument("System or mail mismatch");
       }
 
       int mode = 0;
@@ -637,14 +622,12 @@ namespace alisov
         mode = 2;
         metric_name = "TIME";
       } else if (type != "short") {
-        std::cout << "<INVALID COMMAND>" << std::endl;
-        return;
+        throw std::invalid_argument("Invalid Command");
       }
 
       RouteResult res = calculate(m->current_post, m->current_office, target_office, mode);
       if (res.path.empty()) {
-        std::cout << "<INVALID COMMAND>" << std::endl;
-        return;
+        throw std::runtime_error("Path not found");
       }
 
       std::cout << "<ROUTED: " << track_id << ", PATH: ";
@@ -688,59 +671,62 @@ namespace alisov
     std::string cmd;
 
     while (std::cin >> cmd) {
-      if (cmd == "make-post") {
-        std::string name;
-        std::cin >> name;
-        manager.make_post(name);
-      } else if (cmd == "show-post") {
-        std::string name;
-        std::cin >> name;
-        manager.show_post(name);
-      } else if (cmd == "add-office") {
-        std::string p_name, o_name;
-        std::cin >> p_name >> o_name;
-        manager.add_office(p_name, o_name);
-      } else if (cmd == "show-office") {
-        std::string p_name, o_name;
-        std::cin >> p_name >> o_name;
-        manager.show_office(p_name, o_name);
-      } else if (cmd == "add-mail") {
-        std::string p_name, t_id, o_name;
-        double w;
-        std::cin >> p_name >> t_id >> o_name >> w;
-        manager.add_mail(p_name, t_id, o_name, w);
-      } else if (cmd == "show-mail") {
-        std::string p_name, t_id;
-        std::cin >> p_name >> t_id;
-        manager.show_mail(p_name, t_id);
-      } else if (cmd == "move-mail") {
-        std::string p_name, t_id, new_o;
-        std::cin >> p_name >> t_id >> new_o;
-        manager.move_mail(p_name, t_id, new_o);
-      } else if (cmd == "find-weight") {
-        std::string p_name;
-        double l, r;
-        std::cin >> p_name >> l >> r;
-        manager.find_weight(p_name, l, r);
-      } else if (cmd == "link-offices") {
-        std::string p_name, o1, o2;
-        double d;
-        std::cin >> p_name >> o1 >> o2 >> d;
-        manager.link_offices(p_name, o1, o2, d);
-      } else if (cmd == "route-mail") {
-        std::string p_name, t_id, t_off, type;
-        std::cin >> p_name >> t_id >> t_off >> type;
-        manager.route_mail(p_name, t_id, t_off, type);
-      } else {
-        std::cout << "<INVALID COMMAND>\n";
+      try {
+        if (cmd == "make-post") {
+          std::string name;
+          std::cin >> name;
+          manager.make_post(name);
+        } else if (cmd == "show-post") {
+          std::string name;
+          std::cin >> name;
+          manager.show_post(name);
+        } else if (cmd == "add-office") {
+          std::string p_name, o_name;
+          std::cin >> p_name >> o_name;
+          manager.add_office(p_name, o_name);
+        } else if (cmd == "show-office") {
+          std::string p_name, o_name;
+          std::cin >> p_name >> o_name;
+          manager.show_office(p_name, o_name);
+        } else if (cmd == "add-mail") {
+          std::string p_name, t_id, o_name;
+          double w;
+          std::cin >> p_name >> t_id >> o_name >> w;
+          manager.add_mail(p_name, t_id, o_name, w);
+        } else if (cmd == "show-mail") {
+          std::string p_name, t_id;
+          std::cin >> p_name >> t_id;
+          manager.show_mail(p_name, t_id);
+        } else if (cmd == "move-mail") {
+          std::string p_name, t_id, new_o;
+          std::cin >> p_name >> t_id >> new_o;
+          manager.move_mail(p_name, t_id, new_o);
+        } else if (cmd == "find-weight") {
+          std::string p_name;
+          double l, r;
+          std::cin >> p_name >> l >> r;
+          manager.find_weight(p_name, l, r);
+        } else if (cmd == "link-offices") {
+          std::string p_name, o1, o2;
+          double d;
+          std::cin >> p_name >> o1 >> o2 >> d;
+          manager.link_offices(p_name, o1, o2, d);
+        } else if (cmd == "route-mail") {
+          std::string p_name, t_id, t_off, type;
+          std::cin >> p_name >> t_id >> t_off >> type;
+          manager.route_mail(p_name, t_id, t_off, type);
+        } else {
+          std::cout << "<INVALID COMMAND>\n";
+        }
+      } catch (const std::exception &e) {
+        std::cout << e.what() << "\n";
       }
     }
   }
 
-} // namespace alisov
+}
 
 int main()
 {
   alisov::process_commands();
-  return 0;
 }
