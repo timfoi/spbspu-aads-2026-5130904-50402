@@ -1,8 +1,10 @@
 #include <algorithm>
 #include <cstddef>
+#include <functional>
 #include <iostream>
 #include <stdexcept>
 #include <string>
+#include <unordered_map>
 #include <vector>
 
 namespace alisov
@@ -670,60 +672,82 @@ namespace alisov
     PostManager manager;
     std::string cmd;
 
+    std::unordered_map< std::string, std::function< void() > > command_handlers = {
+        {"make-post",
+         [&]() {
+           std::string name;
+           std::cin >> name;
+           manager.make_post(name);
+         }},
+        {"show-post",
+         [&]() {
+           std::string name;
+           std::cin >> name;
+           manager.show_post(name);
+         }},
+        {"add-office",
+         [&]() {
+           std::string p_name, o_name;
+           std::cin >> p_name >> o_name;
+           manager.add_office(p_name, o_name);
+         }},
+        {"show-office",
+         [&]() {
+           std::string p_name, o_name;
+           std::cin >> p_name >> o_name;
+           manager.show_office(p_name, o_name);
+         }},
+        {"add-mail",
+         [&]() {
+           std::string p_name, t_id, o_name;
+           double w;
+           std::cin >> p_name >> t_id >> o_name >> w;
+           manager.add_mail(p_name, t_id, o_name, w);
+         }},
+        {"show-mail",
+         [&]() {
+           std::string p_name, t_id;
+           std::cin >> p_name >> t_id;
+           manager.show_mail(p_name, t_id);
+         }},
+        {"move-mail",
+         [&]() {
+           std::string p_name, t_id, new_o;
+           std::cin >> p_name >> t_id >> new_o;
+           manager.move_mail(p_name, t_id, new_o);
+         }},
+        {"find-weight",
+         [&]() {
+           std::string p_name;
+           double l, r;
+           std::cin >> p_name >> l >> r;
+           manager.find_weight(p_name, l, r);
+         }},
+        {"link-offices",
+         [&]() {
+           std::string p_name, o1, o2;
+           double d;
+           std::cin >> p_name >> o1 >> o2 >> d;
+           manager.link_offices(p_name, o1, o2, d);
+         }},
+        {"route-mail", [&]() {
+           std::string p_name, t_id, t_off, type;
+           std::cin >> p_name >> t_id >> t_off >> type;
+           manager.route_mail(p_name, t_id, t_off, type);
+         }}};
     while (std::cin >> cmd) {
-      try {
-        if (cmd == "make-post") {
-          std::string name;
-          std::cin >> name;
-          manager.make_post(name);
-        } else if (cmd == "show-post") {
-          std::string name;
-          std::cin >> name;
-          manager.show_post(name);
-        } else if (cmd == "add-office") {
-          std::string p_name, o_name;
-          std::cin >> p_name >> o_name;
-          manager.add_office(p_name, o_name);
-        } else if (cmd == "show-office") {
-          std::string p_name, o_name;
-          std::cin >> p_name >> o_name;
-          manager.show_office(p_name, o_name);
-        } else if (cmd == "add-mail") {
-          std::string p_name, t_id, o_name;
-          double w;
-          std::cin >> p_name >> t_id >> o_name >> w;
-          manager.add_mail(p_name, t_id, o_name, w);
-        } else if (cmd == "show-mail") {
-          std::string p_name, t_id;
-          std::cin >> p_name >> t_id;
-          manager.show_mail(p_name, t_id);
-        } else if (cmd == "move-mail") {
-          std::string p_name, t_id, new_o;
-          std::cin >> p_name >> t_id >> new_o;
-          manager.move_mail(p_name, t_id, new_o);
-        } else if (cmd == "find-weight") {
-          std::string p_name;
-          double l, r;
-          std::cin >> p_name >> l >> r;
-          manager.find_weight(p_name, l, r);
-        } else if (cmd == "link-offices") {
-          std::string p_name, o1, o2;
-          double d;
-          std::cin >> p_name >> o1 >> o2 >> d;
-          manager.link_offices(p_name, o1, o2, d);
-        } else if (cmd == "route-mail") {
-          std::string p_name, t_id, t_off, type;
-          std::cin >> p_name >> t_id >> t_off >> type;
-          manager.route_mail(p_name, t_id, t_off, type);
-        } else {
-          std::cout << "<INVALID COMMAND>\n";
+      auto it = command_handlers.find(cmd);
+      if (it != command_handlers.end()) {
+        try {
+          it->second();
+        } catch (const std::exception &e) {
+          std::cout << e.what() << "\n";
         }
-      } catch (const std::exception &e) {
-        std::cout << e.what() << "\n";
+      } else {
+        std::cout << "<INVALID COMMAND>\n";
       }
     }
   }
-
 }
 
 int main()
